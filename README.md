@@ -1,6 +1,6 @@
 <h1 align="center">Welcome to devops-assignment-1 👋</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.1-blue.svg?cacheSeconds=2592000" />
   <a href="https://github.com/MosesUgwulo/DevOps-Assignment-1#readme" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -11,6 +11,10 @@
     <img alt="License: ISC" src="https://img.shields.io/github/license/MosesUgwulo/devops-assignment-1" />
   </a>
 </p>
+
+> The overall objective of this assignment is to write a Python 3 program to automate the process of
+creating, launching and monitoring public-facing web servers in the Amazon cloud. A web server will
+run on an EC2 instance and an S3 bucket will also be used to serve some static content.
 
 ### 🏠 [Homepage](https://github.com/MosesUgwulo/DevOps-Assignment-1#readme)
 
