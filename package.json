@@ -1,7 +1,7 @@
 {
   "name": "devops-assignment-1",
   "version": "1.0.1",
-  "description": "",
+  "description": "The overall objective of this assignment is to write a Python 3 program to automate the process of\ncreating, launching and monitoring public-facing web servers in the Amazon cloud. A web server will\nrun on an EC2 instance and an S3 bucket will also be used to serve some static content.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
