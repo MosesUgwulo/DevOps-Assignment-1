@@ -112,7 +112,7 @@ try:
     
 
     print('\nOpening web browser to : ' + new_bucket.name + '.s3-website-us-east-1.amazonaws.com') # Print message
-    # webbrowser.open('http://' + new_bucket.name + '.s3-website-us-east-1.amazonaws.com') # Open web browser to bucket website
+    webbrowser.open('http://' + new_bucket.name + '.s3-website-us-east-1.amazonaws.com') # Open web browser to bucket website
 
 
 
