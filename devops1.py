@@ -123,12 +123,16 @@ try:
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(stringLength))
 
-    new_bucket = s3.create_bucket(Bucket='mugwulo-' + randomString()) # Create bucket with unique name
+    new_bucket = s3.create_bucket(Bucket='mugwulo-' + randomString(),
+        ACL='public-read',
+    ) 
+    
     new_bucket.wait_until_exists() # wait until bucket exists
     print('Bucket successfully created: ' + new_bucket.name) # Print bucket name
     print('\nEnabling static website hosting...') # enable static website hosting
 
     new_bucket.Acl().put(ACL='public-read') # Make bucket public
+
     website_configuration = { 
         'ErrorDocument': {
             'Key': 'error.html'
@@ -166,12 +170,6 @@ try:
         }
     )
 
-    s3_client.upload_file('logo.jpg', new_bucket.name, 'logo.jpg',
-        ExtraArgs={
-            'ContentType': 'image/jpg',
-            'ACL': 'public-read',
-        }
-    )
 
     # download a file from a url
     print('\nDownloading logo from url...') # Print message
@@ -179,12 +177,19 @@ try:
     urllib.request.urlretrieve(url, 'logo.jpg') # Download file from url
     print('File successfully downloaded.') # Print message
 
+    s3_client.upload_file('logo.jpg', new_bucket.name, 'logo.jpg',
+        ExtraArgs={
+            'ContentType': 'image/jpg',
+            'ACL': 'public-read',
+        }
+    )
+
     # set permissions for the files
     print('\nSetting permissions for files...') # Print message
     new_bucket.Object('index.html').Acl().put(ACL='public-read') # Set index.html permissions
     new_bucket.Object('style.css').Acl().put(ACL='public-read') # Set style.css permissions
     new_bucket.Object('script.js').Acl().put(ACL='public-read') # Set script.js permissions
-    new_bucket.Object('logo.jpg').Acl().put(ACL='public-read') # Set logo.jpg permissions
+    s3_client.put_object_acl(ACL='public-read', Bucket=new_bucket.name, Key='logo.jpg') # Set logo.jpg permissions
     print('Permissions successfully set.') # Print message
 
 
