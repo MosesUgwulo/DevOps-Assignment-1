@@ -1,0 +1,2 @@
+Instance URL: http://54.91.209.223
+S3 Bucket URL: http://mugwulo-40ghj1.s3-website-us-east-1.amazonaws.com
