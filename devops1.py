@@ -1,4 +1,5 @@
 from cgitb import html
+from ipaddress import ip_address
 from os import system
 import time
 import boto3
@@ -6,6 +7,7 @@ import webbrowser
 import random
 import string
 import urllib
+import subprocess
 
 # Create EC2 client
 ec2 = boto3.resource('ec2')
@@ -71,9 +73,9 @@ try:
     
 
 except Exception as e:
-    print("An error occured while creating EC2 instance, check error.txt or console for more details")
+    print("An error occured while creating EC2 instance, check ec2_error.log or console for more details")
     print(e)
-    errorfile = open("error.log", "w")
+    errorfile = open("ec2_error.log", "w")
     errorfile.write(str(e))
     errorfile.close()
     print("Error file created")
@@ -83,17 +85,48 @@ else:
     '\n[ID: ' + new_instance[0].id + ']' + 
     '\n[Type: ' + new_instance[0].instance_type + ']' + # Print instance type
     '\n[Current state: ' + new_instance[0].state['Name'] + ']') # Print instance state
-    new_instance[0].wait_until_running() # Wait until instance is running
-    new_instance[0].reload() # Reload instance attributes
+
+    # make loop to check if instance is running
+    while new_instance[0].state['Name'] != 'running':
+        time.sleep(1)
+        new_instance[0].reload()
+        
+    print('\nInstance is now running')
     print('[Current state: ' + new_instance[0].state['Name'] + ']' +
     '\n[Public IP: ' + new_instance[0].public_ip_address + ']\n') # Print instance public IP
 
     print("Waiting to be redirected to the webserver...") # Print message
-    time.sleep(20) # Wait 15 seconds
+    time.sleep(20) # Wait 20 seconds
     print("Opening web browser to : " + new_instance[0].public_ip_address) # Print message
 
     webbrowser.open('http://' + new_instance[0].public_ip_address) # Open web browser to instance public IP
+    ip_address = new_instance[0].public_ip_address # Set variable to instance public IP
 
+try:
+    print("Changing permissions of key pair...")
+    system("chmod 400 MosesKeyPair.pem") # Change permissions of key pair
+    print("Permissions changed")
+
+    print("Copying monitor.sh to instance...")
+    system(f"scp -o StrictHostKeyChecking=no -i MosesKeyPair.pem monitor.sh ec2-user@{ip_address}:.") # Copy monitor.sh to instance
+    print("monitor.sh copied")
+
+    print("Changing permissions of monitor.sh...")
+    system(f"ssh -i MosesKeyPair.pem ec2-user@{ip_address} 'chmod 700 monitor.sh'") # Change permissions of monitor.sh
+    print("Permissions changed")
+
+    print("Running monitor.sh on instance...")
+    system(f"ssh -i MosesKeyPair.pem ec2-user@{ip_address} './monitor.sh'") # Run monitor.sh on instance
+    print("monitor.sh running")
+
+    print("Listing files on instance...")
+    system(f"ssh -i MosesKeyPair.pem ec2-user@{ip_address} 'ls -l'") # List files on instance
+    
+except Exception as e:
+    print(e)
+
+else:
+    print("Monitor script successfully run")
 
     # generate 6 random characters
 def randomString(stringLength=6):
