@@ -8,7 +8,6 @@ import webbrowser
 import random
 import string
 import urllib
-import subprocess
 
 # Create EC2 client
 ec2 = boto3.resource('ec2')
