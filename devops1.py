@@ -2,6 +2,7 @@ from cgitb import html
 from ipaddress import ip_address
 from os import system
 import time
+from urllib import response
 import boto3
 import webbrowser
 import random
@@ -96,13 +97,14 @@ else:
     '\n[Public IP: ' + new_instance[0].public_ip_address + ']\n') # Print instance public IP
 
     print("Waiting to be redirected to the webserver...") # Print message
-    time.sleep(20) # Wait 20 seconds
+    time.sleep(30) # Wait 30 seconds
     print("Opening web browser to : " + new_instance[0].public_ip_address) # Print message
 
     webbrowser.open('http://' + new_instance[0].public_ip_address) # Open web browser to instance public IP
     ip_address = new_instance[0].public_ip_address # Set variable to instance public IP
 
 try:
+    time.sleep(120)
     print("Changing permissions of key pair...")
     system("chmod 400 MosesKeyPair.pem") # Change permissions of key pair
     print("Permissions changed")
@@ -121,12 +123,74 @@ try:
 
     print("Listing files on instance...")
     system(f"ssh -i MosesKeyPair.pem ec2-user@{ip_address} 'ls -l'") # List files on instance
-    
+    print("Monitor script successfully run")
+
 except Exception as e:
     print(e)
 
-else:
-    print("Monitor script successfully run")
+try:
+    # setup cloudwatch
+    cloudwatch = boto3.client('cloudwatch')
+    cloudwatch.put_metric_alarm(
+        AlarmName='DevOps1',
+        ComparisonOperator='LessThanThreshold',
+        EvaluationPeriods=1,
+        MetricName='CPUUtilization',
+        Namespace='AWS/EC2',
+        Period=60,
+        Statistic='Average',
+        Threshold=50.0,
+        ActionsEnabled=False,
+        AlarmActions=[
+            'arn:aws:automate:us-east-1:ec2:terminate',
+        ],
+        AlarmDescription='Alarm when server CPU utilization exceeds 50%',
+        Dimensions=[
+            {
+                'Name': 'InstanceId',
+                'Value': new_instance[0].id
+            },
+        ],
+        Unit='Seconds'
+    )
+
+    response = cloudwatch.get_metric_statistics(
+        Namespace='AWS/EC2',
+        MetricName='CPUUtilization',
+        Dimensions=[
+            {
+                'Name': 'InstanceId',
+                'Value': new_instance[0].id
+            },
+        ],
+        StartTime=time.time() - 60,
+        EndTime=time.time(),
+        Period=60,
+        Statistics=[
+            'Average',
+        ],
+        Unit='Percent'
+    )
+
+    # print cloudwatch data
+    print("\n\nCloudwatch data: "+ str(response) + "\n\n"
+            "Alarm created: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['AlarmName']) + "\n"
+            "Alarm description: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['AlarmDescription']) + "\n"
+            "Alarm state: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['StateValue']) + "\n"
+            "Alarm actions: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['AlarmActions']) + "\n"
+            "Alarm actions enabled: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['ActionsEnabled']) + "\n"
+            "Alarm comparison operator: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['ComparisonOperator']) + "\n"
+            "Alarm evaluation periods: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['EvaluationPeriods']) + "\n"
+            "Alarm metric name: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['MetricName']) + "\n"
+            "Alarm namespace: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['Namespace']) + "\n"
+            "Alarm period: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['Period']) + "\n"
+            "Alarm statistic: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['Statistic']) + "\n"
+            "Alarm threshold: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['Threshold']) + "\n"
+            "Alarm unit: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['Unit']) + "\n"
+            "Alarm dimensions: " + str(cloudwatch.describe_alarms()['MetricAlarms'][0]['Dimensions']) + "\n")
+
+except Exception as e:
+    print(e)
 
     # generate 6 random characters
 def randomString(stringLength=6):
@@ -214,4 +278,3 @@ except Exception as e:
     errorfile.write(str(e))
     errorfile.close()
     print("Error file created")
-
